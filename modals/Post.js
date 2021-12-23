@@ -25,18 +25,6 @@ const postSchema = mongoose.Schema({
     },
   ],
   favorites: Number,
-  tops: [
-    {
-      type: mongoose.Types.ObjectId,
-      ref: "Category",
-    },
-  ],
-  lastests: [
-    {
-      type: mongoose.Types.ObjectId,
-      ref: "Category",
-    },
-  ],
 })
 
 const postJoi = Joi.object({
@@ -46,12 +34,7 @@ const postJoi = Joi.object({
   favorites: Joi.number(),
 })
 
-const categeoryJoi = Joi.object({
-  top: Joi.array().items(Joi.objectId()).min(1),
-  lastest: Joi.array().items(Joi.objectId()).min(1),
-})
 const Post = mongoose.model("Post", postSchema)
 
 module.exports.Post = Post
 module.exports.postJoi = postJoi
-module.exports.categeoryJoi = categeoryJoi

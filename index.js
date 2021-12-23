@@ -7,7 +7,7 @@ const JoiObjectId = require("joi-objectid")
 Joi.objectId = JoiObjectId(Joi)
 const users = require("./routes/users")
 const posts = require("./routes/posts")
-const categories = require("./routes/categories")
+// const categories = require("./routes/categories")
 const interests = require("./routes/interests")
 
 mongoose
@@ -25,7 +25,6 @@ app.use(cors())
 app.use("/api/auth", users)
 app.use("/api/posts", posts)
 app.use("/api/interests", interests)
-app.use("/api/categories", categories)
 
 const port = 5000
 

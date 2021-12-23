@@ -11,15 +11,18 @@ const {
   userProfileJoi,
   foregtPasswordJoi,
   restPasswordJoi,
+  interestsJoi,
 } = require("../modals/User")
 const checkToken = require("../middleware/CheckToken")
 const CheckAdmin = require("../middleware/CheckAdmin")
 const { Comment } = require("../modals/Comment")
 const validId = require("../middleware/ValidId")
+const { Post } = require("../modals/Post")
+const { Interest } = require("../modals/Interest")
 
 router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
   try {
-    const { firstName, lastName, email, password, avatar, birthDate, sex } = req.body
+    const { firstName, lastName, email, password, avatar, birthDate, gender } = req.body
 
     const user = await User.findOne({ email })
     if (user) return res.status(400).send("user is already registerd")
@@ -34,52 +37,52 @@ router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
       password: hash,
       avatar,
       birthDate,
-      sex,
+      gender,
       emaiVerified: false,
       role: "User",
     })
 
-    // const transporter = nodemailer.createTransport({
-    //   service: "gmail",
-    //   port: 587,
-    //   secure: false, // true for 465, false for other ports
-    //   auth: {
-    //     user: process.env.SENDER_EMAIL, // generated ethereal user
-    //     pass: process.env.SENDER_PASSWORD, // generated ethereal password
-    //   },
-    // })
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SENDER_EMAIL, // generated ethereal user
+        pass: process.env.SENDER_PASSWORD, // generated ethereal password
+      },
+    })
 
-    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
 
-    // await transporter.sendMail({
-    //   from: `"Forproject ." <${process.env.SENDER_EMAIL}>`, // sender address
-    //   to: email, // list of receivers
-    //   subject: "Email Verification", // Subject line
+    await transporter.sendMail({
+      from: `"Forproject ." <${process.env.SENDER_EMAIL}>`, // sender address
+      to: email, // list of receivers
+      subject: "Email Verification", // Subject line
 
-    //   html: `Hello, please click on this link to verify your email.
-    //   <a href="http://localhost:3000/email_verified/${token}">verify email</a>`, // html body
-    // })
-    // res.send("user created, please check the link in your email")
+      html: `Hello, please click on this link to verify your email.
+      <a href="http://localhost:3000/email_verified/${token}">verify email</a>`, // html body
+    })
+    res.send("user created, please check the link in your email")
     await newUser.save()
     delete newUser._doc.password
-    res.json(newUser)
+    // res.json(newUser)
   } catch (error) {
     res.status(500).json(error.message)
   }
 })
-// router.get("/verify_email/:token", async (req, res) => {
-//   try {
-//     const decryptToken = jwt.verify(req.params.token, process.env.JWT_SECRET_KEY)
-//     const userId = decryptToken.id
+router.get("/verify_email/:token", async (req, res) => {
+  try {
+    const decryptToken = jwt.verify(req.params.token, process.env.JWT_SECRET_KEY)
+    const userId = decryptToken.id
 
-//     const userFound = await User.findByIdAndUpdate(userId, { $set: { emailVerified: true } }).select("-__v -password")
-//     if (!userFound) return res.status(404).send("user not found")
+    const userFound = await User.findByIdAndUpdate(userId, { $set: { emailVerified: true } }).select("-__v -password")
+    if (!userFound) return res.status(404).send("user not found")
 
-//     res.send("user verified")
-//   } catch (error) {
-//     res.status(500).json(error.message)
-//   }
-// })
+    res.send("user verified")
+  } catch (error) {
+    res.status(500).json(error.message)
+  }
+})
 
 // router.get("/forget-password", JoiBody(foregtPasswordJoi), async (req, res) => {
 //   try {
@@ -111,7 +114,6 @@ router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
 //     delete user._doc.password
 
 //     // res.send("rest password is sent, please check the link in your email")
-
 //   } catch (error) {
 //     res.status(500).json(error.message)
 //   }
@@ -179,7 +181,7 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "5d" })
 
-    res.json(token)
+    res.send(token)
   } catch (error) {
     res.status(500).send(error.message)
   }
@@ -187,7 +189,10 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
 
 router.get("/profile", checkToken, async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-__v -role")
+    const user = await User.findById(req.userId)
+      .select("-__v -role -password")
+      .populate("interests")
+      .populate("myPosts")
     res.json(user)
   } catch (error) {
     res.status(500).send(error.message)
@@ -215,7 +220,7 @@ router.put("/profile", checkToken, JoiBody(userProfileJoi), async (req, res) => 
 
 router.get("/users", async (req, res) => {
   try {
-    const user = await User.find({ role: "User" }).select("-__v -password")
+    const user = await User.find({ role: "User" }).select("-__v -password").populate("interests")
     res.json(user)
   } catch (error) {
     res.status(500).send(error.message)
@@ -234,28 +239,33 @@ router.post("/login/admin", JoiBody(userLoginJoi), async (req, res) => {
     if (!comparison) return res.status(400).send("password incorrect")
     const token = jwt.sign({ id: userFound._id }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
 
-    res.json(token)
-  } catch (error) {
-    res.status(500).json(error.message)
-  }
-})
-
-router.delete("/users/:id", CheckAdmin, validId, async (req, res) => {
-  try {
-    // const user = await User.findById(req.params.id)
-    // if (!user) return res.status(404).json("user not found")
-    // if (user.role !== "Admin") return res.status(403).send("unathorized action")
-
-    // await User.findByIdAndRemove(req.params.id)
-    // await Comment.deleteMany({ owner: req.params.id })
-    // res.json(user)
-    await User.findByIdAndRemove(req.params.id)
-    // if (!user) return res.status(404).send("user not  found")
-
-    await Comment.deleteMany({ owner: req.params.id })
-    res.send("deleted")
+    res.send(token)
   } catch (error) {
     res.status(500).send(error.message)
   }
 })
+
+router.delete("/user/:id", CheckAdmin, validId("id"), async (req, res) => {
+  try {
+    const user = await User.findByIdAndRemove(req.params.id)
+    if (!user) return res.status(404).send("user not found")
+    await Comment.deleteMany({ owner: req.params.id })
+    res.send("user is deleted")
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+router.post("/interests", checkToken, JoiBody(interestsJoi), async (req, res) => {
+  const { interests } = req.body
+  const interestsSet = new Set(interests)
+  if (interestsSet.size < interests.length) return res.status(400).send("there is a duplicated interest")
+  const interestsFound = await Interest.find({ _id: { $in: interests } })
+  if (interestsFound.length < interests.length) return res.status(404).send("some of interests is not found")
+
+  await User.findByIdAndUpdate(req.userId, { $set: { interests } })
+
+  res.send("interests added")
+})
+
 module.exports = router
