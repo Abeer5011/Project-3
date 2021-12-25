@@ -1,12 +1,12 @@
 const express = require("express")
 const router = express.Router()
-const { postJoi, Post, interestViewJoi } = require("../modals/Post")
+const { postJoi, Post } = require("../modals/Post")
 const JoiBody = require("../middleware/JoiBody")
 const checkToken = require("../middleware/CheckToken")
 const validId = require("../middleware/ValidId")
 const { Comment, commentJoi } = require("../modals/Comment")
 const { User } = require("../modals/User")
-const { Interest } = require("../modals/Interest")
+// const { Interest } = require("../modals/Interest")
 const CheckAdmin = require("../middleware/CheckAdmin")
 
 router.get("/", async (req, res) => {
@@ -30,13 +30,12 @@ router.get("/", async (req, res) => {
 
 router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
   try {
-    const { photo, caption, tags, favorites } = req.body
+    const { photo, caption, tags } = req.body
 
     const post = new Post({
       photo,
       caption,
       tags,
-      favorites,
       owner: req.userId,
     })
 
@@ -164,6 +163,26 @@ router.get("/post/:id", checkToken, async (req, res) => {
     await user.save()
     res.json(post)
   } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+router.get("/:postId/favorites", checkToken, validId("postId"), async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId)
+    if (!post) return res.status(404).send("post not found")
+
+    const userFound = post.favorites.find(favorite => favorite == req.userId)
+    if (userFound) {
+      await Post.findByIdAndUpdate(req.params.postId, { $pull: { favorites: req.userId } })
+      res.send("like is removed")
+    } else {
+      await Post.findByIdAndUpdate(req.params.postId, { $push: { favorites: req.userId } })
+
+      res.send("post liked")
+    }
+  } catch (error) {
+    console.log(error)
     res.status(500).send(error.message)
   }
 })

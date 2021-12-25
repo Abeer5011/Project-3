@@ -52,7 +52,7 @@ router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
       },
     })
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET_KEY, { expiresIn: "100d" })
 
     await transporter.sendMail({
       from: `"Forproject ." <${process.env.SENDER_EMAIL}>`, // sender address

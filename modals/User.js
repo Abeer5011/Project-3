@@ -25,6 +25,7 @@ const userSchema = mongoose.Schema({
     default:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/2048px-User_font_awesome.svg.png",
   },
+  backgroundImage: String,
   role: {
     type: String,
     enum: ["Admin", "User"],
@@ -40,6 +41,12 @@ const userSchema = mongoose.Schema({
     {
       type: mongoose.Types.ObjectId,
       ref: "Interest",
+    },
+  ],
+  favorites: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "Post",
     },
   ],
 })
@@ -63,6 +70,7 @@ const userProfileJoi = Joi.object({
   lastName: Joi.string().max(50).min(1),
   email: Joi.string().email().max(100).min(1),
   avatar: Joi.string().uri().max(1000).min(1),
+  backgroundImage: Joi.string().uri().max(1000).min(1),
   birthDate: Joi.date().max("1-1-2005"),
 })
 

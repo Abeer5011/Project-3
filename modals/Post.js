@@ -24,14 +24,18 @@ const postSchema = mongoose.Schema({
       ref: "Interest",
     },
   ],
-  favorites: Number,
+  favorites: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 })
 
 const postJoi = Joi.object({
   caption: Joi.string().min(1).max(50).required(),
   photo: Joi.string().uri().min(50).max(1000).required(),
   tags: Joi.array().items(Joi.objectId()).min(1).required(),
-  favorites: Joi.number(),
 })
 
 const Post = mongoose.model("Post", postSchema)
