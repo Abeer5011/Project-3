@@ -18,7 +18,7 @@ const postSchema = mongoose.Schema({
       ref: "Comment",
     },
   ],
-  tags: [
+  interests: [
     {
       type: mongoose.Types.ObjectId,
       ref: "Interest",
@@ -35,7 +35,7 @@ const postSchema = mongoose.Schema({
 const postJoi = Joi.object({
   caption: Joi.string().min(1).max(50).required(),
   photo: Joi.string().uri().min(50).max(1000).required(),
-  tags: Joi.array().items(Joi.objectId()).min(1).required(),
+  interests: Joi.array().items(Joi.objectId()).min(1).required(),
 })
 
 const Post = mongoose.model("Post", postSchema)

@@ -2,11 +2,13 @@ const Joi = require("joi")
 const mongoose = require("mongoose")
 
 const interestSchema = mongoose.Schema({
-  tag: String,
+  interest: String,
+  photo: String,
 })
 
 const interestJoi = {
-  tag: Joi.string().required(),
+  interests: Joi.string().required(),
+  photo: Joi.string(),
 }
 
 const Interest = mongoose.model("Interest", interestSchema)

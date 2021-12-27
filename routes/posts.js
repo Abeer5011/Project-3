@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
       },
     })
     .populate({
-      path: "tags",
+      path: "interests",
     })
     .populate({
       path: "owner",
@@ -30,12 +30,12 @@ router.get("/", async (req, res) => {
 
 router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
   try {
-    const { photo, caption, tags } = req.body
+    const { photo, caption, interests } = req.body
 
     const post = new Post({
       photo,
       caption,
-      tags,
+      interests,
       owner: req.userId,
     })
 
@@ -53,8 +53,8 @@ router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
 
 router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
   try {
-    const { photo, caption, tag } = req.body
-    const post = await Post.findByIdAndUpdate(req.params.postId, { $set: { photo, caption, tag } }, { new: true })
+    const { photo, caption, interest } = req.body
+    const post = await Post.findByIdAndUpdate(req.params.postId, { $set: { photo, caption, interest } }, { new: true })
     if (!post) return res.status(404).send("post not longer existed")
 
     await post.save()
@@ -64,7 +64,7 @@ router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
   }
 })
 
-router.delete("/:postId", checkToken, validId("postId"), async (req, res) => {
+router.delete("/:postId", checkToken, CheckAdmin, validId("postId"), async (req, res) => {
   try {
     await Comment.deleteMany({ postId: req.params.postId })
     const post = await Post.findByIdAndRemove(req.params.postId)
@@ -129,14 +129,14 @@ router.delete("/:postId/comments/:commentId", checkToken, validId("postId", "com
   }
 })
 
-// router.post("/:postId/tags", checkToken, validId("postId"), async (req, res) => {
-//   const { tag } = req.body
+// router.post("/:postId/interests", checkToken, validId("postId"), async (req, res) => {
+//   const { interest } = req.body
 //   const post = await Post.findById(req.params.postId)
 //   if (!post) return res.status(404).send("post no longer existed ")
 //   const newTag = new Interest({
-//     tag,
+//     interest,
 //   })
-//   await Post.findByIdAndUpdate(req.params.postId, { $push: { tags: newTag._id } })
+//   await Post.findByIdAndUpdate(req.params.postId, { $push: { interests: newTag._id } })
 //   await newTag.save()
 //   res.json(newTag)
 // })
@@ -147,15 +147,15 @@ router.get("/post/:id", checkToken, async (req, res) => {
 
     const user = await User.findById(req.userId)
     console.log(user.interestView)
-    post.tags.forEach(tag => {
-      const tagFound = user.interestView.find(ivc => ivc.interestId == tag.toString())
-      console.log(tag)
-      console.log(tagFound)
-      if (!tagFound) {
-        user.interestView.push({ interestId: tag, viewCount: 1 })
+    post.interests.forEach(interest => {
+      const interestFound = user.interestView.find(ivc => ivc.interestId == interest.toString())
+      console.log(interest)
+      console.log(interestFound)
+      if (!interestFound) {
+        user.interestView.push({ interestId: interest, viewCount: 1 })
       } else {
         user.interestView = user.interestView.map(ivc =>
-          ivc.interestId == tag.toString() ? { interestId: ivc.interestId, viewCount: ivc.viewCount + 1 } : ivc
+          ivc.interestId == interest.toString() ? { interestId: ivc.interestId, viewCount: ivc.viewCount + 1 } : ivc
         )
       }
     })
