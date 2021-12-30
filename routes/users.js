@@ -178,7 +178,7 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
 
     const compare = await bcrypt.compare(password, user.password)
     if (!compare) return res.status(400).send("password incorrect")
-
+    // if (!user.emailVerified) return res.status(403).send("user not verified, please check your email")
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "5d" })
 
     res.send(token)
@@ -190,9 +190,21 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
 router.get("/profile", checkToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId)
+      .populate({
+        path: "interestView",
+        populate: {
+          path: "interestId",
+        },
+      })
+      .populate({
+        path: "myPosts",
+        populate: {
+          path: "owner",
+        },
+      })
       .select("-__v -role -password")
       .populate("interests")
-      .populate("myPosts")
+
     res.json(user)
   } catch (error) {
     res.status(500).send(error.message)
@@ -250,7 +262,7 @@ router.delete("/user/:id", CheckAdmin, validId("id"), async (req, res) => {
     const user = await User.findByIdAndRemove(req.params.id)
     if (!user) return res.status(404).send("user not found")
     await Comment.deleteMany({ owner: req.params.id })
-    // await Post.deleteMany({ owner: req.params.id })
+    await Post.deleteMany({ owner: req.params.id })
     res.send("user is deleted")
   } catch (error) {
     res.status(500).send(error.message)

@@ -24,6 +24,14 @@ router.post("/", CheckAdmin, async (req, res) => {
   res.json(newTag)
 })
 
+router.put("/:id", CheckAdmin, async (req, res) => {
+  const { interest, photo } = req.body
+  const interestFound = await Interest.findByIdAndUpdate(req.params.id, { $set: { interest, photo } }, { new: true })
+  if (!interestFound) return res.status(404).send("interest not found")
+  await interestFound.save()
+  res.json(interestFound)
+})
+
 router.delete("/:id", CheckAdmin, validId("id"), async (req, res) => {
   try {
     const interest = await Interest.findByIdAndRemove(req.params.id)

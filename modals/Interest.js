@@ -7,7 +7,7 @@ const interestSchema = mongoose.Schema({
 })
 
 const interestJoi = {
-  interests: Joi.string().required(),
+  interest: Joi.string().required(),
   photo: Joi.string(),
 }
 

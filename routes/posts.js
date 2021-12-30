@@ -30,12 +30,14 @@ router.get("/", async (req, res) => {
 
 router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
   try {
-    const { photo, caption, interests } = req.body
+    const { photo, caption, interests, video } = req.body
 
     const post = new Post({
       photo,
       caption,
       interests,
+      video,
+
       owner: req.userId,
     })
 
@@ -53,8 +55,12 @@ router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
 
 router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
   try {
-    const { photo, caption, interest } = req.body
-    const post = await Post.findByIdAndUpdate(req.params.postId, { $set: { photo, caption, interest } }, { new: true })
+    const { photo, caption, interest, video } = req.body
+    const post = await Post.findByIdAndUpdate(
+      req.params.postId,
+      { $set: { photo, caption, interest, video } },
+      { new: true }
+    )
     if (!post) return res.status(404).send("post not longer existed")
 
     await post.save()
@@ -67,6 +73,7 @@ router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
 router.delete("/:postId", checkToken, CheckAdmin, validId("postId"), async (req, res) => {
   try {
     await Comment.deleteMany({ postId: req.params.postId })
+
     const post = await Post.findByIdAndRemove(req.params.postId)
     if (!post) return res.status(404).send("post no longer existed")
 
@@ -143,7 +150,7 @@ router.delete("/:postId/comments/:commentId", checkToken, validId("postId", "com
 
 router.get("/post/:id", checkToken, async (req, res) => {
   try {
-    let post = await Post.findById(req.params.id)
+    let post = await Post.findById(req.params.id).populate("owner")
 
     const user = await User.findById(req.userId)
     console.log(user.interestView)

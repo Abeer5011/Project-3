@@ -70,7 +70,6 @@ const userProfileJoi = Joi.object({
   lastName: Joi.string().max(50).min(1),
   email: Joi.string().email().max(100).min(1),
   avatar: Joi.string().uri().max(1000).min(1),
-  backgroundImage: Joi.string().uri().max(1000).min(1),
   birthDate: Joi.date().max("1-1-2005"),
 })
 
