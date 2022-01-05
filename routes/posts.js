@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const { postJoi, Post } = require("../modals/Post")
+const { postJoi, Post, editPostJoi } = require("../modals/Post")
 const JoiBody = require("../middleware/JoiBody")
 const checkToken = require("../middleware/CheckToken")
 const validId = require("../middleware/ValidId")
@@ -53,7 +53,7 @@ router.post("/", checkToken, JoiBody(postJoi), async (req, res) => {
   }
 })
 
-router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
+router.put("/:postId", checkToken, validId("postId"), JoiBody(editPostJoi), async (req, res) => {
   try {
     const { photo, caption, interest, video } = req.body
     const post = await Post.findByIdAndUpdate(
@@ -70,7 +70,7 @@ router.put("/:postId", checkToken, validId("postId"), async (req, res) => {
   }
 })
 
-router.delete("/:postId", checkToken, CheckAdmin, validId("postId"), async (req, res) => {
+router.delete("/:postId", checkToken, validId("postId"), async (req, res) => {
   try {
     await Comment.deleteMany({ postId: req.params.postId })
 
@@ -182,9 +182,12 @@ router.get("/:postId/favorites", checkToken, validId("postId"), async (req, res)
     const userFound = post.favorites.find(favorite => favorite == req.userId)
     if (userFound) {
       await Post.findByIdAndUpdate(req.params.postId, { $pull: { favorites: req.userId } })
+      await User.findByIdAndUpdate(req.userId, { $pull: { favorites: req.params.postId } })
+
       res.send("like is removed")
     } else {
       await Post.findByIdAndUpdate(req.params.postId, { $push: { favorites: req.userId } })
+      await User.findByIdAndUpdate(req.userId, { $push: { favorites: req.params.postId } })
 
       res.send("post liked")
     }
