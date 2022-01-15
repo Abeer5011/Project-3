@@ -84,64 +84,64 @@ router.get("/verify_email/:token", async (req, res) => {
   }
 })
 
-router.get("/forget-password", JoiBody(foregtPasswordJoi), async (req, res) => {
-  try {
-    const user = await User.findOne({ email })
-    if (user) return res.status(400).json("user already registerd")
+// router.get("/forget-password", JoiBody(foregtPasswordJoi), async (req, res) => {
+//   try {
+//     const user = await User.findOne({ email })
+//     if (user) return res.status(400).json("user already registerd")
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.SENDER_EMAIL, // generated ethereal user
-        pass: process.env.SENDER_PASSWORD, // generated ethereal password
-      },
-    })
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       port: 587,
+//       secure: false, // true for 465, false for other ports
+//       auth: {
+//         user: process.env.SENDER_EMAIL, // generated ethereal user
+//         pass: process.env.SENDER_PASSWORD, // generated ethereal password
+//       },
+//     })
 
-    const token = jwt.sign({ id: user._id, forgetPassword }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
+//     const token = jwt.sign({ id: user._id, forgetPassword }, process.env.JWT_SECRET_KEY, { expiresIn: "20d" })
 
-    await transporter.sendMail({
-      from: `"Forproject ." <${process.env.SENDER_PASSWORD}>`, // sender address
-      to: email, // list of receivers
-      subject: "rest password", // Subject line
+//     await transporter.sendMail({
+//       from: `"Forproject ." <${process.env.SENDER_PASSWORD}>`, // sender address
+//       to: email, // list of receivers
+//       subject: "rest password", // Subject line
 
-      html: `Hello, please click on this link to rest the password.
-    <a href="http://localhost:3000/forget-password/${token}">rest passwod</a>`, // html body
-    })
+//       html: `Hello, please click on this link to rest the password.
+//     <a href="http://localhost:3000/forget-password/${token}">rest passwod</a>`, // html body
+//     })
 
-    await user.save()
-    delete user._doc.password
+//     await user.save()
+//     delete user._doc.password
 
-    // res.send("rest password is sent, please check the link in your email")
-  } catch (error) {
-    res.status(500).json(error.message)
-  }
-})
+//     // res.send("rest password is sent, please check the link in your email")
+//   } catch (error) {
+//     res.status(500).json(error.message)
+//   }
+// })
 
-router.post("/rest-password/:token", JoiBody(restPasswordJoi), async (req, res) => {
-  try {
-    const decryptToken = jwt.verify(token, process.env.JWT_SECRET_KEY)
+// router.post("/rest-password/:token", JoiBody(restPasswordJoi), async (req, res) => {
+//   try {
+//     const decryptToken = jwt.verify(token, process.env.JWT_SECRET_KEY)
 
-    if (!decryptToken.forgetPassword) return res.status(403).send("unathorized action")
-    const userId = decryptToken.id
+//     if (!decryptToken.forgetPassword) return res.status(403).send("unathorized action")
+//     const userId = decryptToken.id
 
-    const userFound = await User.findById(userId).select("-__v -password")
-    if (!userFound) return res.status(404).send("user not found")
-    const { password } = req.body
-    const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(password, salt)
+//     const userFound = await User.findById(userId).select("-__v -password")
+//     if (!userFound) return res.status(404).send("user not found")
+//     const { password } = req.body
+//     const salt = await bcrypt.genSalt(10)
+//     const hash = await bcrypt.hash(password, salt)
 
-    const newPassword = new User({
-      password: hash,
-    })
-    await newPassword.save()
-    delete newUser._doc.password
-    res.send("done")
-  } catch (error) {
-    res.status(500).json(error.message)
-  }
-})
+//     const newPassword = new User({
+//       password: hash,
+//     })
+//     await newPassword.save()
+//     delete newUser._doc.password
+//     res.send("done")
+//   } catch (error) {
+//     res.status(500).json(error.message)
+//   }
+// })
 
 router.post("/add-admin", JoiBody(userSignupJoi), async (req, res) => {
   try {
