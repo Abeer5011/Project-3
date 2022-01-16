@@ -179,7 +179,7 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
     const compare = await bcrypt.compare(password, user.password)
     if (!compare) return res.status(400).send("password incorrect")
     // if (!user.emailVerified) return res.status(403).send("user not verified, please check your email")
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "5d" })
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "100d" })
 
     res.send(token)
   } catch (error) {
