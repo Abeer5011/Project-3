@@ -204,6 +204,7 @@ router.get("/profile", checkToken, async (req, res) => {
       })
       .select("-__v -role -password")
       .populate("interests")
+      .populate("favorites")
 
     res.json(user)
   } catch (error) {
