@@ -16,7 +16,7 @@ const userSchema = mongoose.Schema({
   interestView: [interestViewSchema],
   gender: String,
   birthDate: Date,
-  emaiVerified: {
+  emailVerified: {
     type: Boolean,
     default: false,
   },
@@ -25,7 +25,7 @@ const userSchema = mongoose.Schema({
     default:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/User_font_awesome.svg/2048px-User_font_awesome.svg.png",
   },
-  backgroundImage: String,
+
   role: {
     type: String,
     enum: ["Admin", "User"],
@@ -57,7 +57,7 @@ const userSignupJoi = Joi.object({
   email: Joi.string().email().max(100).min(1).required(),
   password: Joi.string().max(12).min(6).required(),
   avatar: Joi.string().uri().max(1000).min(1),
-  birthDate: Joi.date().max("1-1-2005").required(),
+  birthDate: Joi.date().required(),
   gender: Joi.string().valid("male", "female").required(),
 })
 const userLoginJoi = Joi.object({
@@ -70,15 +70,6 @@ const userProfileJoi = Joi.object({
   lastName: Joi.string().max(50).min(1),
   email: Joi.string().email().max(100).min(1),
   avatar: Joi.string().uri().max(1000).min(1),
-  birthDate: Joi.date().max("1-1-2005"),
-})
-
-const restPasswordJoi = Joi.object({
-  password: Joi.string().min(6).max(10).required(),
-})
-
-const foregtPasswordJoi = Joi.object({
-  password: Joi.string().min(6).max(10).required(),
 })
 
 const interestsJoi = Joi.object({
@@ -90,6 +81,4 @@ module.exports.User = User
 module.exports.userLoginJoi = userLoginJoi
 module.exports.userSignupJoi = userSignupJoi
 module.exports.userProfileJoi = userProfileJoi
-module.exports.restPasswordJoi = restPasswordJoi
-module.exports.foregtPasswordJoi = foregtPasswordJoi
 module.exports.interestsJoi = interestsJoi

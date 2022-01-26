@@ -4,15 +4,7 @@ const jwt = require("jsonwebtoken")
 const JoiBody = require("../middleware/JoiBody")
 const nodemailer = require("nodemailer")
 const bcrypt = require("bcrypt")
-const {
-  User,
-  userSignupJoi,
-  userLoginJoi,
-  userProfileJoi,
-  foregtPasswordJoi,
-  restPasswordJoi,
-  interestsJoi,
-} = require("../modals/User")
+const { User, userSignupJoi, userLoginJoi, userProfileJoi, interestsJoi } = require("../modals/User")
 const checkToken = require("../middleware/CheckToken")
 const CheckAdmin = require("../middleware/CheckAdmin")
 const { Comment } = require("../modals/Comment")
@@ -38,7 +30,7 @@ router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
       avatar,
       birthDate,
       gender,
-      emaiVerified: false,
+      emailVerified: false,
       role: "User",
     })
 
@@ -65,7 +57,6 @@ router.post("/signup", JoiBody(userSignupJoi), async (req, res) => {
     res.send("user created, please check the link in your email")
     await newUser.save()
     delete newUser._doc.password
-    // res.json(newUser)
   } catch (error) {
     res.status(500).json(error.message)
   }
@@ -119,7 +110,7 @@ router.post("/login", JoiBody(userLoginJoi), async (req, res) => {
 
     const compare = await bcrypt.compare(password, user.password)
     if (!compare) return res.status(400).send("password incorrect")
-    // if (!user.emailVerified) return res.status(403).send("user not verified, please check your email")
+    if (!user.emailVerified) return res.status(403).send("user not verified, please check your email")
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "100d" })
 
     res.send(token)
@@ -155,7 +146,7 @@ router.get("/profile", checkToken, async (req, res) => {
 
 router.put("/profile", checkToken, JoiBody(userProfileJoi), async (req, res) => {
   try {
-    const { firstName, lastName, email, password, avatar, birthDate } = req.body
+    const { firstName, lastName, email, password, avatar } = req.body
     let hash
     if (password) {
       const salt = await bcrypt.genSalt(10)
@@ -163,7 +154,7 @@ router.put("/profile", checkToken, JoiBody(userProfileJoi), async (req, res) => 
     }
     const user = await User.findByIdAndUpdate(
       req.userId,
-      { $set: { firstName, lastName, email, password: hash, avatar, birthDate } },
+      { $set: { firstName, lastName, email, password: hash, avatar } },
       { new: true }
     )
     res.json(user)
